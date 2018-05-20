@@ -1,0 +1,119 @@
+- hosts: all
+  vars:
+    esp_dir: "esp"
+    esp32_port_dir: "ports/esp32"
+    xtensa_url: "https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-61-gab8375a-5.2.0.tar.gz"
+
+  tasks:
+    - name: Upgrade
+      apt:
+        upgrade: dist
+        update_cache: yes
+        cache_valid_time: 3600
+      become: true
+      become_user: root
+
+    - name: Install extra kernel modules (for cp210x)
+      apt:
+        name: linux-image-extra-virtual
+        cache_valid_time: 3600
+      become: true
+      become_user: root
+
+    - name: Install picocom
+      apt:
+        name: picocom
+        cache_valid_time: 3600
+      become: true
+      become_user: root
+
+    # - name: Insert cp210x kernel module
+    #   modprobe:
+    #     name: cp210x
+    #     state: present
+    #   become: true
+    #   become_user: root
+
+    - name: Install xtensa toolchain dependencies
+      apt:
+        name: "{{ item }}"
+        state: latest
+      become: true
+      become_user: root
+      with_items:
+        - git
+        - wget
+        - make
+        - libncurses-dev
+        - flex
+        - bison
+        - gperf
+        - python
+        - python-serial
+
+    - name: Download ESP32 toolchain
+      get_url:
+        url: "{{ xtensa_url }}"
+        dest:  "{{ ansible_env.HOME }}/xtensa-toolchain.tar.gz"
+
+    - name: "Make {{ ansible_env.HOME }}/{{ esp_dir}} dir"
+      file:
+        path: "{{ ansible_env.HOME }}/{{ esp_dir }}"
+        state: directory
+
+    - name: Unpack tool chain
+      unarchive:
+        remote_src: true
+        src:  "{{ ansible_env.HOME }}/xtensa-toolchain.tar.gz"
+        dest: "{{ ansible_env.HOME }}/{{ esp_dir }}"
+        creates: "{{ ansible_env.HOME }}/{{ esp_dir }}/xtensa-esp32-elf"
+
+    - name: Add toolchain to PATH
+      lineinfile:
+        line: "PATH=$PATH:$HOME/{{ esp_dir }}/xtensa-esp32-elf/bin"
+        path: "{{ ansible_env.HOME }}/.profile"
+        insertafter: EOF
+
+    - name: Clone micropython-esp32
+      git:
+        repo: https://github.com/micropython/micropython-esp32
+        dest: "{{ ansible_env.HOME }}/micropython-esp32"
+        clone: yes
+
+    - name: Get ESP-IDF supported commit hash
+      shell: grep "ESPIDF_SUPHASH :=" "{{ ansible_env.HOME }}/micropython-esp32/{{ esp32_port_dir }}/Makefile" | cut -d '=' -f 2 | tr -d '[:space:]'
+      register: commit_hash
+      changed_when: False
+
+    - name: Clone ESP-IDF (with supported commit)
+      git:
+        repo: https://github.com/espressif/esp-idf.git
+        dest: "{{ ansible_env.HOME }}/{{ esp_dir }}/esp-idf"
+        clone: yes
+        recursive: yes
+        version: "{{ commit_hash.stdout }}"
+
+    - name: Add ESP-IDF to env var
+      lineinfile:
+        line: "export IDF_PATH={{ ansible_env.HOME }}/{{ esp_dir }}/esp-idf"
+        path: "{{ ansible_env.HOME }}/.bashrc"
+        insertafter: EOF
+
+    - name: Add ESPIDF env var
+      lineinfile:
+        line: "export ESPIDF={{ ansible_env.HOME }}/{{ esp_dir }}/esp-idf"
+        path: "{{ ansible_env.HOME }}/.bashrc"
+        insertafter: EOF
+
+    - name: Build micropython cross-compiler
+      make:
+        chdir: "{{ ansible_env.HOME }}/micropython-esp32/mpy-cross"
+
+    - name: Build binary
+      make:
+        chdir: "{{ ansible_env.HOME }}/micropython-esp32/{{ esp32_port_dir }}"
+      environment:
+        PATH: "{{ ansible_env.PATH }}:{{ ansible_env.HOME }}/{{ esp_dir }}/xtensa-esp32-elf/bin"
+        ESPIDF: "{{ ansible_env.HOME }}/{{ esp_dir }}/esp-idf"
+
+
