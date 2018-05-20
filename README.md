@@ -1,22 +1,25 @@
 
 # Table of Contents
 
-1.  [Quick start](#orga1ffd18)
-    1.  [Connecting](#org2c9b795)
-        1.  [Identifying the device](#org6d69ace)
-    2.  [Hardware](#org92834f1)
-        1.  [Components](#orgc3db99e)
-    3.  [CTF](#org2dfafbd)
-2.  [Links](#org5b3a4c8)
+1.  [Quick start](#orgd5e671e)
+    1.  [Connecting](#org8d98bd9)
+        1.  [Identifying the device](#org09d42fd)
+    2.  [Hardware](#org79daae7)
+        1.  [Components](#orgfa9a8f7)
+    3.  [CTF](#org51b38bb)
+    4.  [Vagrant](#org68db7af)
+        1.  [Requirements](#orgc5575cf)
+        2.  [Using](#org8f78f1c)
+2.  [Links](#orgb42ddeb)
 
 
 
-<a id="orga1ffd18"></a>
+<a id="orgd5e671e"></a>
 
 # Quick start
 
 
-<a id="org2c9b795"></a>
+<a id="org8d98bd9"></a>
 
 ## Connecting
 
@@ -32,7 +35,7 @@ Hit Ctrl-C a few times and Enter to drop in to
 a [micropython](https://micropython.org/) repl
 
 
-<a id="org6d69ace"></a>
+<a id="org09d42fd"></a>
 
 ### Identifying the device
 
@@ -49,7 +52,7 @@ a [micropython](https://micropython.org/) repl
     It will be listed under *Ports* in *Device Manager*
 
 
-<a id="org92834f1"></a>
+<a id="org79daae7"></a>
 
 ## Hardware
 
@@ -57,7 +60,7 @@ To get the correspending GPIO Pin numbers wiht the pins on on the board see `pin
 A schematic is provided in `hm2018badgechematic.pdf`
 
 
-<a id="orgc3db99e"></a>
+<a id="orgfa9a8f7"></a>
 
 ### Components
 
@@ -66,7 +69,7 @@ A schematic is provided in `hm2018badgechematic.pdf`
 -   APA102 RGB LEDs (10) Controlled over SPI
 
 
-<a id="org2dfafbd"></a>
+<a id="org51b38bb"></a>
 
 ## CTF
 
@@ -81,11 +84,35 @@ To play:
 >>> CTF.submit<sub>solution</sub>(0, 'my answer')
 ```
 
-- Challenges 10,11 & 12 are the flags.
+Challenges 10,11 & 12 are the flags.
 
-- Solutions are always submitted as a string
 
-<a id="org5b3a4c8"></a>
+<a id="org68db7af"></a>
+
+## Vagrant
+
+
+<a id="orgc5575cf"></a>
+
+### Requirements
+
+1.  Vagrant
+2.  Virtual Box
+
+
+<a id="org8f78f1c"></a>
+
+### Using
+
+-   `vagrant up` to start the VM
+-   `vagrant ssh` to access a shell in the VM
+-   `cd ~/micopython-esp32/ports/esp32` in the vm to 
+    -   **`make`:** build firmware (will be in `build/` as `firmware.bin`)
+    -   **`make erase`:** erase flash
+    -   **`make deploy`:** to flash badge (make sure to pass through USB in VirtualBox)
+
+
+<a id="orgb42ddeb"></a>
 
 # Links
 
