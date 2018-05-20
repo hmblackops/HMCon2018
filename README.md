@@ -18,7 +18,7 @@
 
 <a id="org2c9b795"></a>
 
-nn## Connecting
+## Connecting
 
 In Putty, scroll down in the Category pane & fill in the
 fields uner serial
